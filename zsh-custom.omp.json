@@ -5,43 +5,47 @@
       "alignment": "left",
       "segments": [
         {
-          "background": "#feae34",
-          "foreground": "#262b44",
+          "background": "#00B8A9",
+          "foreground": "#312e2e",
           "leading_diamond": "\ue0b6",
+          "style": "diamond",
+          "template": "\uf31b \ue0b1",
+          "type": "os"
+        },
+        {
+          "background": "#F8F3D4",
+          "foreground": "#312e2e",
           "powerline_symbol": "\ue0b0",
           "properties": {
             "style": "folder"
           },
-          "style": "diamond",
+          "style": "powerline",
           "template": " \ue5ff {{ .Path }} ",
-          "trailing_diamond": "\ue0b0",
           "type": "path"
         },
         {
-          "background": "#40bc8e",
-          "foreground": "#262b44",
+          "background": "#F6416C",
+          "foreground": "#312e2e",
           "powerline_symbol": "\ue0b0",
           "properties": {
             "branch_icon": "",
+            "fetch_stash_count": true,
+            "fetch_status": false,
             "fetch_upstream_icon": true
           },
           "style": "powerline",
-          "template": " {{ .UpstreamIcon }}{{ .HEAD }} ",
+          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }} ",
           "type": "git"
         },
         {
-          "background": "#0095e9",
-          "background_templates": [
-            "{{ if gt .Code 0 }}#ff0044{{ end }}"
-          ],
-          "foreground": "#ffffff",
-          "leading_diamond": "<transparent,background>\ue0b0</>",
+          "background": "#FFDE7D",
+          "foreground": "#312e2e",
           "properties": {
             "always_enabled": true
           },
           "style": "diamond",
           "template": " \uf0e7 ",
-          "trailing_diamond": "\ue0b4",
+          "trailing_diamond": "\ue0b0",
           "type": "status"
         }
       ],
