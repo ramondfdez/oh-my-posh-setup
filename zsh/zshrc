@@ -1,0 +1,55 @@
+# -----------------------------
+# ZINIT (plugin manager)
+# -----------------------------
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    mkdir -p "$HOME/.local/share/zinit"
+    git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
+fi
+
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+
+# -----------------------------
+# HISTORY
+# -----------------------------
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+
+setopt SHARE_HISTORY          # sync history live across open shells
+setopt EXTENDED_HISTORY       # record timestamp and duration
+setopt APPEND_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE      # skip commands prefixed with a space
+setopt HIST_REDUCE_BLANKS
+setopt HIST_VERIFY            # expand !! for review instead of running it
+
+# -----------------------------
+# COMPLETIONS
+# -----------------------------
+autoload -Uz compinit
+# Full security check at most once a day, cached startup otherwise.
+if [[ -n $HOME/.zcompdump(N.mh+24) ]]; then
+    compinit
+else
+    compinit -C
+fi
+
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' menu select
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$HOME/.cache/zsh/zcompcache"
+mkdir -p "$HOME/.cache/zsh"
+
+# -----------------------------
+# PLUGINS (order matters: highlighting must load last)
+# -----------------------------
+zinit light zsh-users/zsh-autosuggestions
+zinit light zdharma-continuum/fast-syntax-highlighting
+
+# -----------------------------
+# PROMPT (Starship)
+# -----------------------------
+eval "$(starship init zsh)"

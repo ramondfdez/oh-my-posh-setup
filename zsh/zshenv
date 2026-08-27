@@ -1,0 +1,12 @@
+# -----------------------------
+# PATH (typeset -U keeps entries unique across nested shells)
+# -----------------------------
+typeset -U path PATH
+
+# uv
+path=("$HOME/.local/bin" $path)
+
+# oMLX CLI shim
+path=("$HOME/.omlx/bin" $path)
+
+export PATH
