@@ -49,7 +49,9 @@ flowchart TD
 | [starship/starship.toml](starship/starship.toml) | `~/.config/starship.toml` | Prompt symbols |
 | [kitty/kitty.conf](kitty/kitty.conf) | `~/.config/kitty/kitty.conf` | Terminal settings |
 | [kitty/current-theme.conf](kitty/current-theme.conf) | `~/.config/kitty/current-theme.conf` | Tokyo Night colours |
-| [git/gitconfig](git/gitconfig) | `~/.gitconfig` | Git identity |
+| [git/gitconfig](git/gitconfig) | `~/.gitconfig` | Git router: picks an identity per directory |
+| [git/gitconfig-personal](git/gitconfig-personal) | `~/.gitconfig-personal` | Identity used under `~/Code/Personal/` |
+| [git/gitconfig-work](git/gitconfig-work) | `~/.gitconfig-work` | Identity used under `~/Code/Work/` |
 
 ---
 
@@ -90,7 +92,7 @@ Never skip this — you can roll back with these files if anything breaks.
 
 ```zsh
 ts=$(date +%Y%m%d-%H%M%S)
-for f in ~/.zshrc ~/.zshenv ~/.zprofile ~/.gitconfig; do
+for f in ~/.zshrc ~/.zshenv ~/.zprofile ~/.gitconfig ~/.gitconfig-personal ~/.gitconfig-work; do
   [[ -f $f ]] && cp "$f" "$f.bak-$ts"
 done
 echo "backups tagged with $ts"
@@ -112,14 +114,60 @@ cp kitty/current-theme.conf ~/.config/kitty/current-theme.conf
 > Prefer symlinks (`ln -sf "$PWD/zsh/zshrc" ~/.zshrc`) if you want edits in the repo to apply
 > immediately and stay version-controlled. With `cp` the repo is only a snapshot and will drift.
 
-### Step 6 — Set your Git identity
+### Step 6 — Set your Git identities
 
-Do **not** copy [git/gitconfig](git/gitconfig) verbatim; it contains my name and email.
+[git/gitconfig](git/gitconfig) holds **no identity of its own**. It uses Git's `includeIf` to
+pick one based on where the repository lives, so you never have to switch users manually:
+
+```ini
+[user]
+	useConfigOnly = true
+
+[includeIf "gitdir/i:~/Code/Personal/"]
+	path = ~/.gitconfig-personal
+
+[includeIf "gitdir/i:~/Code/Work/"]
+	path = ~/.gitconfig-work
+```
+
+Copy the router as-is, then write your own identities into the two included files:
 
 ```zsh
-git config --global user.name  "Your Name"
-git config --global user.email "you@example.com"
+cp git/gitconfig ~/.gitconfig
+
+cat > ~/.gitconfig-personal <<'EOF'
+[user]
+	email = you@personal.com
+	name  = Your Name
+EOF
+
+cat > ~/.gitconfig-work <<'EOF'
+[user]
+	email = you@company.com
+	name  = Your Name
+EOF
 ```
+
+Three rules make or break this:
+
+- **The trailing `/` is mandatory.** `~/Code/Personal` without it never matches subdirectories.
+- **Use `gitdir/i:`, not `gitdir:`.** macOS is case-insensitive on disk but Git's matching is
+  not, so `~/Code/Work` vs `~/code/work` would silently fail to match.
+- `includeIf` resolves the repository's real path, so symlinked repos match their target.
+
+`user.useConfigOnly = true` means a repo cloned **outside** those two directories has no
+identity at all, and Git refuses to commit instead of inventing an author from your hostname.
+Add another `includeIf` block, or set `user.email` locally in that repo.
+
+Verify from inside any repository:
+
+```zsh
+git config user.email
+```
+
+> If you use a different SSH key or signing key per account, put `core.sshCommand`,
+> `user.signingkey` and `commit.gpgsign` in the per-identity files too — the router only
+> switches whatever those files contain.
 
 ### Step 7 — Start a new shell
 
@@ -252,7 +300,9 @@ kitty applies its own defaults, so the config only needs overrides. The active s
 
 ### `~/.gitconfig`
 
-Only sets the commit identity (`user.name` and `user.email`). See Step 6.
+A router, not an identity. `includeIf "gitdir/i:…"` loads `~/.gitconfig-personal` under
+`~/Code/Personal/` and `~/.gitconfig-work` under `~/Code/Work/`; `user.useConfigOnly = true`
+turns an unmatched repository into a hard error rather than a wrong author. See Step 6.
 
 ---
 
@@ -285,5 +335,7 @@ cp ~/.zshrc ~/.zshenv ~/.zprofile zsh/    # then rename to drop the leading dot
 | Duplicated entries in `$PATH` | Something re-exports `PATH` outside `.zshenv`; `typeset -U path PATH` must run first |
 | Plugins missing after install | Delete `~/.local/share/zinit` and start a new shell to re-bootstrap |
 | Completions behaving oddly | `rm -f ~/.zcompdump*` and run `exec zsh` to rebuild the cache |
+| `no name was given` / `unable to auto-detect email` on commit | The repo is outside `~/Code/Personal/` and `~/Code/Work/`, so no `includeIf` matched. Move it, add a block, or set `user.email` locally |
+| Commits made with the wrong identity | `git config user.email` inside the repo; check the trailing `/` and the `gitdir/i:` case-insensitive prefix in `~/.gitconfig` |
 | Slow startup | Profile with `zmodload zsh/zprof` at the top of `.zshrc` and `zprof` at the bottom |
 | Want to roll back | Restore the `*.bak-<timestamp>` files created in Step 4 |

@@ -1,5 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
-
+# Default is 500ms; cold-start of toolchain binaries (go, node) exceeds it on first exec.
+command_timeout = 1000
 [aws]
 symbol = " "
 

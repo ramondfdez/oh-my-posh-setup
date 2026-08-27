@@ -1,3 +1,8 @@
 [user]
-	email = ramond_fdez@outlook.com
-	name = ramondfdez
+	useConfigOnly = true
+
+[includeIf "gitdir/i:~/Code/Personal/"]
+	path = ~/.gitconfig-personal
+
+[includeIf "gitdir/i:~/Code/Work/"]
+	path = ~/.gitconfig-work
